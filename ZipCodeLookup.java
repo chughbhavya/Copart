@@ -1,44 +1,65 @@
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 
-import org.json.*;
+import org.json.JSONObject;
 
 public class ZipCodeLookup {
-	
-	public static void main(String args[]) throws Exception{
-		String zipCode="";
-		Scanner s = new Scanner(System.in);
-		System.out.println("Enter zipcode: ");
-		zipCode = s.nextLine();
-		
-		String urlString="http://maps.googleapis.com/maps/api/geocode/json?sensor=true&address="+zipCode;
-		URL url = new URL(urlString);
-		HttpURLConnection connection = (HttpURLConnection)url.openConnection();
-		StringBuilder output = new StringBuilder();
-		connection.setRequestMethod("GET");
-		
-		BufferedReader inPut = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-		
-		String resultLine;
-		
-		while((resultLine = inPut.readLine()) != null){
-			output.append("\n"+ resultLine);
-		}
-		
-		inPut.close();
 
-		JSONObject jo= new JSONObject(output.toString());
+	 static void RestCall(String zipCode){
 		
-		JSONArray ja=jo.getJSONArray("results");
-		JSONArray ja1= new JSONArray();
-		ja1 = (JSONArray)ja.getJSONObject(0).get("address_components");
+		try {
+
+			URL url = new URL("https://www.zipcodeapi.com/rest/SH8Be5Im18StbtqknXgm9a9aoJZsukum2CXhHGDJOvd0ZDknBAJKLSV9CVC6g6si/info.json/"+zipCode+"/degrees");
+			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+			conn.setRequestMethod("GET");
+			conn.setRequestProperty("Accept", "application/json");
+
+			if (conn.getResponseCode() != 200) {
+				throw new RuntimeException("Failed : HTTP error code : "
+						+ conn.getResponseCode());
+			}
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(
+				(conn.getInputStream())));
+
+			String output;
+			//System.out.println("Output from Server .... \n");
+			while ((output = br.readLine()) != null) {
+			
+				JSONObject jObject  = new JSONObject(output);
+				System.out.println("City: "+jObject.getString("city"));
+				System.out.println("State: "+jObject.getString("state"));
+				
+			}
+
+			conn.disconnect();
+
+		  } catch (MalformedURLException e) {
+
+			e.printStackTrace();
+
+		  } catch (IOException e) {
+
+			e.printStackTrace();
+
+		  }
 		
-		for (int i=0;i<ja1.length();i++){
-				System.out.println(ja1.getJSONObject(i).getString("long_name"));
-		}
+	}
+	
+	
+	public static void main(String[] args) {
+
+		Scanner input = new Scanner(System.in);
+        System.out.println("Enter the zipcode");
+        
+        String S = input.nextLine();
+	    RestCall(S);
+
 	}
 
 }
